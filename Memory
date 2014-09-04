@@ -1,0 +1,88 @@
+# implementation of card game - Memory
+import simplegui
+import random
+
+raw_number = range(8)
+List_number = list(raw_number)+list(raw_number)
+exposed_pos = []
+State = 0
+exposed_num =[0, 0] 
+Turns = 0
+
+image_size = [900,900]
+# helper function to initialize globals
+def new_game():
+    global List_number, exposed_pos, Turns, State
+    exposed_pos = [False,False,False,False,False,False,False,False]
+    exposed_pos = list(exposed_pos+exposed_pos) 
+    random.shuffle(List_number)
+    State = 0 
+    Turns = 0
+    label.set_text("Turns = "+str(Turns))
+# define event handlers
+def mouseclick(pos):
+    # add game state logic here
+    #position of exposed
+    global State,exposed_pos, exposed_num, List_number, Turns
+    num = int(pos[0] / 50)    
+    if State == 0:
+       if exposed_pos[num] == False:
+          State = 1
+          exposed_num[0] = num
+          exposed_pos[num] = True
+          Turns += 1
+    elif State == 1:
+       if exposed_pos[num] == False:
+          State = 2
+          exposed_num[1] = num
+          exposed_pos[num] = True
+         
+    else:
+       if exposed_pos[num] == False:
+          if List_number[exposed_num[0]] != List_number[exposed_num[1]]:
+             exposed_pos[exposed_num[0]] = False
+             exposed_pos[exposed_num[1]] = False
+          State = 1
+          exposed_num[0] = num
+          exposed_pos[num] = True      
+          Turns += 1              
+    label.set_text("Turns = "+str(Turns))
+# cards are logically 50x100 pixels in size    
+def draw(canvas):
+    global List_number,exposed_pos
+    back = []
+    front = []
+    id = 0 
+    for elem in exposed_pos:
+        draw_pos = [[id*50,0], [(id+1)*50,0], [(id+1)*50,100], [id*50,100]]
+        if elem == True:  
+            front.append([draw_pos,[id*50+15,65],str(List_number[id]),id])
+        else:
+            back.append([draw_pos,id])
+        id = id + 1 
+        
+    for pos in front:
+         canvas.draw_polygon(pos[0],5,"Black")
+         canvas.draw_text(pos[2], pos[1], 50, 'White')
+       
+    for pos in back:
+         canvas.draw_polygon(pos[0],5,"Black","Green")
+         canvas.draw_image(image, [image_size[0] // 2, image_size[1] // 2] , image_size,
+                         [pos[1]*50 + 25, 50], [50,100])
+
+# create frame and add a button and labels
+frame = simplegui.create_frame("Memory", 800, 100)
+frame.add_button("Reset", new_game)
+image = simplegui.load_image("http://b-wall.com/wp-content/uploads/2014/02/One-Piece-Luffy-After-2-Years.jpg")
+label = frame.add_label("Turns = 0")
+
+# register event handlers
+frame.set_mouseclick_handler(mouseclick)
+frame.set_draw_handler(draw)
+
+# get things rolling
+new_game()
+frame.start()
+
+
+# Always remember to review the grading rubric
